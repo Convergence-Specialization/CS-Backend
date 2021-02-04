@@ -1,2 +1,10 @@
-# CS-Backend
-
+# 융합특성화 자유전공학부 커뮤니티
+## 개발 환경
+ 
+* Front:  
+React JS  
+  
+* Back:  
+  DB: Cloud Firestore  
+  API: Heroku Node JS  
+  Hosting: Github Pages  
