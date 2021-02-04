@@ -1,0 +1,227 @@
+openapi: 3.0.0
+info:
+  title: 융합특성화 자유전공학부 커뮤니티 슝
+  version: '1.0'
+  description: API 정리하는 곳
+servers:
+  - url: 'https://convergence-ssu.herokuapp.com/'
+    description: 헤로쿠 서버
+paths:
+  /board/departmajor/create:
+    post:
+      summary: 문서 작성
+      operationId: post-board-departmajor-create
+      responses:
+        '200':
+          description: OK
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+                    description: success / failed
+                  docId:
+                    type: string
+                    description: Firestore에 저장된 문서 id가 반환됩니다.
+              examples:
+                예시:
+                  value:
+                    result: success
+                    docId: viugw4eygfy987fg2w
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+      description: 글 작성 API
+      parameters:
+        - schema:
+            type: string
+          in: header
+          name: Bearer
+          description: currentUser.getIdToken()으로 idToken이 필요합니다.
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ttitle:
+                  type: string
+                  description: 글 제목
+                content:
+                  type: string
+                  description: 글 내용
+                subject:
+                  type: string
+              required:
+                - ttitle
+                - content
+                - subject
+        description: '글 내용, 제목, 말머리를 전송해야 합니다.'
+      tags:
+        - 전과 게시판
+    parameters: []
+  /user/lostpw:
+    post:
+      summary: 비번 잊어버림
+      tags:
+        - 사용자
+      responses: {}
+      operationId: post-user-lostpw
+      description: 이거 지금 changepw로 되어있는데 lostpw로 바꿔야함.
+  /board:
+    get:
+      summary: Your GET endpoint
+      tags: []
+      responses: {}
+      operationId: get-board
+  /user/signup:
+    post:
+      summary: 회원가입
+      tags:
+        - 사용자
+      responses:
+        '200':
+          description: OK
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+        '400':
+          description: 'Bad Request: 내용이 불충분할 때'
+        '401':
+          description: 'Unauthorized: getUser(uid)했는데 없는 uid일 경우.'
+        '406':
+          description: 이미 있는 uid에 대한 요청일 경우
+      operationId: post-user-signup
+      description: 회원가입을 위한 API
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                method:
+                  type: string
+                  description: GOOGLE | EMAIL 둘 중 하나를 보내야 합니다.
+                uid:
+                  type: string
+                  description: 구글 로그인일 경우는 Firebase Auth에서 가져온 uid가 필요합니다.
+                name:
+                  type: string
+                email:
+                  type: string
+                stduent_id:
+                  type: number
+                is_convergence:
+                  type: boolean
+                password:
+                  type: string
+                  description: 이메일 회원가입때만 필요합니다. 6자리 이상이어야 합니다.
+              required:
+                - method
+                - name
+                - email
+                - stduent_id
+                - is_convergence
+        description: 'Google인지, Email인지가 중요함.'
+  /user/checkgoogleexist:
+    get:
+      summary: 구글 회원가입 정보 DB에 있는지 확인
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+      operationId: get-user-checkgoogleexist
+      description: 구글 회원가입 정보가 Firestore상에 위치하는지 확인합니다.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                uid:
+                  type: string
+              required:
+                - uid
+components:
+  schemas:
+    User:
+      title: User
+      type: object
+      description: ''
+      x-examples:
+        Alice Smith:
+          id: 142
+          firstName: Alice
+          lastName: Smith
+          email: alice.smith@gmail.com
+          dateOfBirth: '1997-10-31'
+          emailVerified: true
+          signUpDate: '2019-08-24'
+      properties:
+        id:
+          type: integer
+          description: Unique identifier for the given user.
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        dateOfBirth:
+          type: string
+          format: date
+          example: '1997-10-31'
+        emailVerified:
+          type: boolean
+          description: Set to true if the user's email has been verified.
+        createDate:
+          type: string
+          format: date
+          description: The date that the user was created.
+      required:
+        - id
+        - firstName
+        - lastName
+        - email
+        - emailVerified
+    Board:
+      title: Board
+      type: object
+      properties:
+        id:
+          type: string
+      description: ''
+  securitySchemes:
+    idToken:
+      type: http
+      scheme: bearer
+tags:
+  - name: 전과 게시판
+  - name: 사용자
