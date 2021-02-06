@@ -168,6 +168,79 @@ paths:
                   type: string
               required:
                 - uid
+  /board/departmajor/comment/create:
+    post:
+      summary: 댓글 작성
+      tags:
+        - 전과 게시판
+      responses:
+        '200':
+          description: OK
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+      operationId: post-board-departmajor-comment-create
+      description: 대댓글이 아닌 댓글 작성
+      parameters: []
+      security:
+        - idToken: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                docId:
+                  type: string
+                content:
+                  type: string
+              required:
+                - docId
+                - content
+        description: '어느 문서에 대한 댓글인지, 댓글 내용은 무엇인지에 대한 내용이 있어야 합니다.'
+  /board/departmajor/subcomment/create:
+    post:
+      summary: 대댓글 작성
+      tags:
+        - 전과 게시판
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+      operationId: post-board-departmajor-subcomment-create
+      description: 대댓글을 작성하는 API입니다.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                originalDocId:
+                  type: string
+                commentId:
+                  type: string
+                content:
+                  type: string
+              required:
+                - originalDocId
+                - commentId
+                - content
+        description: '원본 글 id, 원본 댓글 id, 대댓글 내용이 필요합니다.'
 components:
   schemas:
     User:
