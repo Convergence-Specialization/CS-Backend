@@ -1,13 +1,15 @@
 const crypto = require("crypto");
+const { cryptoConstIv } = require("../config");
 
 const encryptAES = (plainText, key) => {
-  const iv = crypto.randomBytes(16);
+  // 같은 암호화 UID끼리는 구별해야함으로 staticIv를 사용.
+  const staticIv = Buffer.from(cryptoConstIv, "hex");
 
-  const cipher = crypto.createCipheriv("aes-256-cbc", key, iv);
+  const cipher = crypto.createCipheriv("aes-256-cbc", key, staticIv);
   let encrypted = cipher.update(plainText);
   encrypted = Buffer.concat([encrypted, cipher.final()]);
 
-  return iv.toString("hex") + encrypted.toString("hex");
+  return staticIv.toString("hex") + encrypted.toString("hex");
 };
 
 const decryptAES = (cipherText, key) => {

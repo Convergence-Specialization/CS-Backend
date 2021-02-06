@@ -27,13 +27,13 @@ asyncRouter.post("/create", async (req, res, next) => {
     body.content === "" ||
     body.title === "" ||
     body.subject === "" ||
-    !body.subject === "SMART_CAR" ||
-    !body.subject === "ENERGY_SCIENCE" ||
-    !body.subject === "SECURITY" ||
-    !body.subject === "ICT" ||
-    !body.subject === "KOREA" ||
-    !body.subject === "BIGDATA" ||
-    !body.subject === "NONE"
+    (body.subject !== "SMART_CAR" &&
+      body.subject !== "ENERGY_SCIENCE" &&
+      body.subject !== "SECURITY" &&
+      body.subject !== "ICT" &&
+      body.subject !== "KOREA" &&
+      body.subject !== "BIGDATA" &&
+      body.subject !== "NONE")
   ) {
     // TODO: 너무 길이가 길 때도 처리.
     return next(ERRORS.DATA.INVALID_DATA);
@@ -62,9 +62,131 @@ asyncRouter.post("/create", async (req, res, next) => {
       likes_count: 0,
       comments_count: 0,
       secret_comments_count: 0,
+      report_count: 0,
     });
     // TODO: Users collection에 내가 쓴 글 목록 추가.
     res.status(200).send({ result: "Create doc success", docId });
+  } catch (err) {
+    console.log(err);
+    return next(ERRORS.DATA.INVALID_DATA);
+  }
+});
+
+asyncRouter.post("/comment/create", async (req, res, next) => {
+  // body 추출
+  const { body } = req;
+  // 토큰 확인
+  const user = await tokenExporter(req.headers);
+  if (
+    user === ERRORS.AUTH.TOKEN_FAIL ||
+    user === ERRORS.AUTH.NO_AUTH_IN_HEADER
+  ) {
+    return next(user);
+  }
+
+  // body 유효성 체크.
+  if (
+    body.docId === undefined ||
+    body.content === undefined ||
+    body.docId === "" ||
+    body.content === ""
+  ) {
+    return next(ERRORS.DATA.INVALID_DATA);
+  }
+
+  try {
+    // 컬렉션에서 글 작성할 때 저장한 AES키 가져와야함.
+    let { UID_KEY } = await DB.departMajor_UID_KEY
+      .doc(body.docId)
+      .get()
+      .then((doc) => doc.data());
+
+    // 댓글 작성자 UID 암호화.
+    const encryptedUid = encryptAES(user.uid, UID_KEY);
+
+    // 댓글 작성
+    await DB.departMajor.doc(body.docId).collection("comments").add({
+      timestamp: firestore.FieldValue.serverTimestamp(),
+      encryptedUid,
+      content: body.content,
+      subCommentsExist: false,
+      likes_count: 0,
+      report_count: 0,
+    });
+    res.status(200).send({ result: "Post comment success" });
+    // TODO: 댓글 수 늘리기. 여기서부터는 promise로!
+    // await DB.departMajor.doc(body.docId).update({
+    //   comments_count: firestore.FieldValue.increment(1),
+    // });
+    // TODO: 알림 구현. 여기서부터는 promise로!
+    // 원 글 작성자 암호화된 uid 가져옴
+    // let post_encryptedUid = await DB.departMajor
+    //   .doc(body.docId)
+    //   .get()
+    //   .then((doc) => doc.data().encryptedUid);
+
+    // await DB.users.doc(user.uid).collection();
+  } catch (err) {
+    console.log(err);
+    return next(ERRORS.DATA.INVALID_DATA);
+  }
+});
+
+asyncRouter.post("/subcomment/create", async (req, res, next) => {
+  // body 추출
+  const { body } = req;
+  // 토큰 확인
+  const user = await tokenExporter(req.headers);
+  if (
+    user === ERRORS.AUTH.TOKEN_FAIL ||
+    user === ERRORS.AUTH.NO_AUTH_IN_HEADER
+  ) {
+    return next(user);
+  }
+
+  // body 유효성 체크.
+  if (
+    body.originalDocId === undefined ||
+    body.commentId === undefined ||
+    body.content === undefined ||
+    body.commentId === "" ||
+    body.content === ""
+  ) {
+    return next(ERRORS.DATA.INVALID_DATA);
+  }
+  try {
+    // 컬렉션에서 글 작성할 때 저장한 AES키 가져와야함.
+    let { UID_KEY } = await DB.departMajor_UID_KEY
+      .doc(body.originalDocId)
+      .get()
+      .then((doc) => doc.data());
+
+    // 댓글 작성자 UID 암호화.
+    const encryptedUid = encryptAES(user.uid, UID_KEY);
+
+    // 대댓글 작성
+    await DB.departMajor
+      .doc(body.originalDocId)
+      .collection("comments")
+      .doc(body.commentId)
+      .collection("subcomments")
+      .add({
+        timestamp: firestore.FieldValue.serverTimestamp(),
+        encryptedUid,
+        content: body.content,
+        likes_count: 0,
+        report_count: 0,
+      });
+
+    // 원본 댓글 대댓글 존재하는거 검증.
+    await DB.departMajor
+      .doc(body.originalDocId)
+      .collection("comments")
+      .doc(body.commentId)
+      .update({ subCommentsExist: true });
+
+    res.status(200).send({ result: "Post subcomment success" });
+    // TODO: 댓글 수 늘리기, 알림 구현. 여기서부터는 promise로!
   } catch (err) {
     console.log(err);
     return next(ERRORS.DATA.INVALID_DATA);
