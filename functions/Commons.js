@@ -15,7 +15,6 @@ const ERRORS = {
     INVALID_DATA: "INVALID_DATA",
   },
 };
-console.log(secrets);
 firebaseAdmin.initializeApp({
   credential: firebaseAdmin.credential.cert(secrets),
 });
