@@ -241,6 +241,57 @@ paths:
                 - commentId
                 - content
         description: '원본 글 id, 원본 댓글 id, 대댓글 내용이 필요합니다.'
+  /board/departmajor/like:
+    post:
+      summary: 게시글에 좋아요를 하는 api
+      tags:
+        - 전과 게시판
+      responses: {}
+      operationId: post-board-departmajor-like
+      description: 게시글에 좋아요를 하는 api입니다. 취소는 나중에 하자.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                docId:
+                  type: string
+                like:
+                  type: string
+                  description: LIKE | UNLIKE 둘 중 하나를 보내야 합니다.
+              required:
+                - docId
+                - like
+        description: 어떤 게시글에 좋아요를 하는지의 내용이 있어야 합니다.
+  /board/departmajor/myencrypteduid:
+    post:
+      summary: 암호화된 uid를 가져옴
+      tags:
+        - 전과 게시판
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  encryptedUid:
+                    type: string
+      operationId: post-board-departmajor-myencrypteduid
+      description: 해당 게시글의 본인의 암호화된 uid를 가져오는 api입니다.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                docId:
+                  type: string
+        description: ''
+      security:
+        - idToken: []
 components:
   schemas:
     User:

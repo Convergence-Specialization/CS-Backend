@@ -230,6 +230,8 @@ asyncRouter.post("/comment/create", async (req, res, next) => {
   }
 });
 
+asyncRouter.post("/comment/like", async (req, res, next) => {});
+
 asyncRouter.post("/subcomment/create", async (req, res, next) => {
   // body 추출
   const { body } = req;
@@ -290,6 +292,7 @@ asyncRouter.post("/subcomment/create", async (req, res, next) => {
     return next(ERRORS.DATA.INVALID_DATA);
   }
 });
+asyncRouter.post("/subcomment/like", async (req, res, next) => {});
 
 asyncRouter.use((err, _req, res, _next) => {
   switch (err) {
