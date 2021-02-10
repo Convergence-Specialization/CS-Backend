@@ -118,7 +118,6 @@ asyncRouter.post("/like", async (req, res, next) => {
     return next(user);
   }
   // 글자 수 확인
-  // TODO: typeof 로 string 아닌것도 처리.
   if (
     body.docId === undefined ||
     body.like === undefined ||
@@ -230,7 +229,78 @@ asyncRouter.post("/comment/create", async (req, res, next) => {
   }
 });
 
-asyncRouter.post("/comment/like", async (req, res, next) => {});
+asyncRouter.post("/comment/like", async (req, res, next) => {
+  // body 추출
+  const { body } = req;
+  // 토큰 확인
+  const user = await tokenExporter(req.headers);
+  if (
+    user === ERRORS.AUTH.TOKEN_FAIL ||
+    user === ERRORS.AUTH.NO_AUTH_IN_HEADER
+  ) {
+    return next(user);
+  }
+  // 글자 수 확인
+  if (
+    body.originalDocId === undefined ||
+    body.commentId === undefined ||
+    body.originalDocId === "" ||
+    body.commentId === ""
+  ) {
+    return next(ERRORS.DATA.INVALID_DATA);
+  }
+
+  // 좋아요 처리 시작.
+  try {
+    // 컬렉션에서 글 작성할 때 저장한 AES키 가져와야함.
+    let { UID_KEY } = await DB.departMajor_UID_KEY
+      .doc(body.originalDocId)
+      .get()
+      .then((doc) => doc.data());
+
+    // 좋아요하는 사람 UID 암호화.
+    const encryptedUid = encryptAES(user.uid, UID_KEY);
+
+    // 댓글에 좋아요 이미 했는지 확인
+    if (
+      await DB.departMajor
+        .doc(body.originalDocId)
+        .collection("comments")
+        .doc(body.commentId)
+        .collection("likes")
+        .where("encryptedUid", "==", encryptedUid)
+        .get()
+        .then((querySnapshot) => querySnapshot.size !== 0)
+    ) {
+      console.log("ALREADY LIKED");
+      return next(ERRORS.DATA.INVALID_DATA);
+    }
+    // 좋아요 누가 했는지 작성
+    await DB.departMajor
+      .doc(body.originalDocId)
+      .collection("comments")
+      .doc(body.commentId)
+      .collection("likes")
+      .add({
+        timestamp: firestore.FieldValue.serverTimestamp(),
+        encryptedUid,
+      });
+    // 좋아요 수 1 올리기.
+    await DB.departMajor
+      .doc(body.originalDocId)
+      .collection("comments")
+      .doc(body.commentId)
+      .update({
+        likes_count: firestore.FieldValue.increment(1),
+      });
+
+    res.status(200).send({ result: "comment like success" });
+    // TODO: 알림 구현.
+  } catch (err) {
+    console.log(err);
+    return next(ERRORS.DATA.INVALID_DATA);
+  }
+});
 
 asyncRouter.post("/subcomment/create", async (req, res, next) => {
   // body 추출
@@ -292,7 +362,89 @@ asyncRouter.post("/subcomment/create", async (req, res, next) => {
     return next(ERRORS.DATA.INVALID_DATA);
   }
 });
-asyncRouter.post("/subcomment/like", async (req, res, next) => {});
+
+asyncRouter.post("/subcomment/like", async (req, res, next) => {
+  // body 추출
+  const { body } = req;
+  // 토큰 확인
+  const user = await tokenExporter(req.headers);
+  if (
+    user === ERRORS.AUTH.TOKEN_FAIL ||
+    user === ERRORS.AUTH.NO_AUTH_IN_HEADER
+  ) {
+    return next(user);
+  }
+  // 글자 수 확인
+  if (
+    body.originalDocId === undefined ||
+    body.commentId === undefined ||
+    body.subcommentId === undefined ||
+    body.originalDocId === "" ||
+    body.commentId === "" ||
+    body.subcommentId === ""
+  ) {
+    return next(ERRORS.DATA.INVALID_DATA);
+  }
+
+  // 좋아요 처리 시작.
+  try {
+    // 컬렉션에서 글 작성할 때 저장한 AES키 가져와야함.
+    let { UID_KEY } = await DB.departMajor_UID_KEY
+      .doc(body.originalDocId)
+      .get()
+      .then((doc) => doc.data());
+
+    // 좋아요하는 사람 UID 암호화.
+    const encryptedUid = encryptAES(user.uid, UID_KEY);
+
+    // 댓글에 좋아요 이미 했는지 확인
+    if (
+      await DB.departMajor
+        .doc(body.originalDocId)
+        .collection("comments")
+        .doc(body.commentId)
+        .collection("subcomments")
+        .doc(body.subcommentId)
+        .collection("likes")
+        .where("encryptedUid", "==", encryptedUid)
+        .get()
+        .then((querySnapshot) => querySnapshot.size !== 0)
+    ) {
+      console.log("ALREADY LIKED");
+      return next(ERRORS.DATA.INVALID_DATA);
+    }
+
+    // 좋아요 누가 했는지 작성
+    await DB.departMajor
+      .doc(body.originalDocId)
+      .collection("comments")
+      .doc(body.commentId)
+      .collection("subcomments")
+      .doc(body.subcommentId)
+      .collection("likes")
+      .add({
+        timestamp: firestore.FieldValue.serverTimestamp(),
+        encryptedUid,
+      });
+
+    // 좋아요 수 1 올리기.
+    await DB.departMajor
+      .doc(body.originalDocId)
+      .collection("comments")
+      .doc(body.commentId)
+      .collection("subcomments")
+      .doc(body.subcommentId)
+      .update({
+        likes_count: firestore.FieldValue.increment(1),
+      });
+
+    res.status(200).send({ result: "subcomment like success" });
+    // TODO: 알림 구현.
+  } catch (err) {
+    console.log(err);
+    return next(ERRORS.DATA.INVALID_DATA);
+  }
+});
 
 asyncRouter.use((err, _req, res, _next) => {
   switch (err) {
