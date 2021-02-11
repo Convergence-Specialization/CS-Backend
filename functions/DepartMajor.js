@@ -212,9 +212,21 @@ asyncRouter.post("/comment/create", async (req, res, next) => {
     });
     res.status(200).send({ result: "Post comment success" });
     // TODO: 댓글 수 늘리기. 여기서부터는 promise로!
-    // await DB.departMajor.doc(body.docId).update({
-    //   comments_count: firestore.FieldValue.increment(1),
-    // });
+    Promise.all([
+      new Promise(async (resolve) => {
+        await DB.departMajor.doc(body.docId).update({
+          comments_count: firestore.FieldValue.increment(1),
+        });
+        resolve();
+      }),
+    ])
+      .then(() => {
+        console.log("comment count increase complete");
+      })
+      .catch((err) => {
+        console.log("error while increasing comment count", err.message);
+      });
+
     // TODO: 알림 구현. 여기서부터는 promise로!
     // 원 글 작성자 암호화된 uid 가져옴
     // let post_encryptedUid = await DB.departMajor
@@ -357,6 +369,20 @@ asyncRouter.post("/subcomment/create", async (req, res, next) => {
 
     res.status(200).send({ result: "Post subcomment success" });
     // TODO: 댓글 수 늘리기, 알림 구현. 여기서부터는 promise로!
+    Promise.all([
+      new Promise(async (resolve) => {
+        await DB.departMajor.doc(body.originalDocId).update({
+          comments_count: firestore.FieldValue.increment(1),
+        });
+        resolve();
+      }),
+    ])
+      .then(() => {
+        console.log("comment count increase complete");
+      })
+      .catch((err) => {
+        console.log("error while increasing comment count", err.message);
+      });
   } catch (err) {
     console.log(err);
     return next(ERRORS.DATA.INVALID_DATA);
