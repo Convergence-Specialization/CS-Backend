@@ -68,8 +68,8 @@ asyncRouter.post("/create", async (req, res, next) => {
     DB.users
       .doc(user.uid)
       .collection("myposts_departmajor")
-      .add({
-        docId: docId,
+      .doc(docId)
+      .set({
         timestamp: firestore.FieldValue.serverTimestamp(),
       })
       .then(() => console.log("added my post success", user.uid));
