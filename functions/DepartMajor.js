@@ -22,7 +22,6 @@ asyncRouter.post("/create", async (req, res, next) => {
     return next(user);
   }
   // 글자 수 확인
-  // TODO: typeof 로 string 아닌것도 처리.
   if (
     body.content === "" ||
     body.title === "" ||
@@ -38,7 +37,6 @@ asyncRouter.post("/create", async (req, res, next) => {
     // TODO: 너무 길이가 길 때도 처리.
     return next(ERRORS.DATA.INVALID_DATA);
   }
-  // TODO: 말머리 추가. 말머리가 6종 이외의 것이면 무조건 빠꾸.
 
   const RANDOM_KEY = getRandomKey(16).toString("hex");
 
@@ -64,8 +62,17 @@ asyncRouter.post("/create", async (req, res, next) => {
       secret_comments_count: 0,
       report_count: 0,
     });
-    // TODO: Users collection에 내가 쓴 글 목록 추가.
     res.status(200).send({ result: "Create doc success", docId });
+
+    // 본인이 쓴 글에 등록.
+    DB.users
+      .doc(user.uid)
+      .collection("myposts_departmajor")
+      .add({
+        docId: docId,
+        timestamp: firestore.FieldValue.serverTimestamp(),
+      })
+      .then(() => console.log("added my post success", user.uid));
   } catch (err) {
     console.log(err);
     return next(ERRORS.DATA.INVALID_DATA);
