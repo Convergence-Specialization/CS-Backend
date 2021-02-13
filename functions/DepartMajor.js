@@ -100,6 +100,15 @@ asyncRouter.post("/delete", async (req, res, next) => {
       .get()
       .then((doc) => doc.data());
 
+    // 암호화된 글 작성자 uid 가져오기
+    let doc_encryptedUid = await DB.departMajor
+      .doc(body.docId)
+      .get()
+      .then((doc) => doc.data().encryptedUid);
+
+    // 복호화된 글 작성자 uid 가져오기
+    let doc_decryptedUid = decryptAES(doc_encryptedUid, UID_KEY);
+
     // 권한 체크.
     if (user.uid !== doc_decryptedUid) {
       return next(ERRORS.AUTH.NO_PERMISSION);
@@ -108,9 +117,6 @@ asyncRouter.post("/delete", async (req, res, next) => {
     // 글 목록에서 제거
     await DB.departMajor.doc(body.docId).delete();
     res.status(200).send({ result: "delete doc success" });
-
-    // 복호화된 글 작성자 uid 가져오기
-    let doc_decryptedUid = decryptAES(doc_encryptedUid, UID_KEY);
 
     // 내 글 목록에서 제거
     await DB.users
@@ -634,6 +640,9 @@ asyncRouter.use((err, _req, res, _next) => {
       break;
     case ERRORS.AUTH.TOKEN_FAIL:
       res.status(401).send({ error: "Problem with token" });
+      break;
+    case ERRORS.AUTH.NO_PERMISSION:
+      res.status(401).send({ error: "No Permission" });
       break;
     default:
       console.log(err);
