@@ -292,6 +292,33 @@ paths:
         description: ''
       security:
         - idToken: []
+  /board/departmajor/delete:
+    post:
+      summary: 문서 삭제 api
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+      operationId: post-board-departmajor-delete
+      description: 문서를 삭제하는 api입니다.
+      security:
+        - idToken: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                docId:
+                  type: string
+        description: 삭제할 docId가 필요합니다.
 components:
   schemas:
     User:
