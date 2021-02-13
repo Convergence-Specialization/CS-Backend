@@ -121,7 +121,7 @@ asyncRouter.post("/delete", async (req, res, next) => {
     // 내 글 목록에서 제거
     await DB.users
       .doc(doc_decryptedUid)
-      .collection("myposts")
+      .collection("myposts_departmajor")
       .doc(body.docId)
       .delete();
     console.log("delete mypost success");
