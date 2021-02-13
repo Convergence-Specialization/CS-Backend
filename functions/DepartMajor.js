@@ -7,6 +7,7 @@ const {
   tokenExporter,
   ERRORS,
   getRandomKey,
+  NOTIFICATION_TYPES,
 } = require("./Commons");
 const asyncRouter = asyncify(express.Router());
 
@@ -167,9 +168,25 @@ asyncRouter.post("/like", async (req, res, next) => {
     await DB.departMajor.doc(body.docId).update({
       likes_count: firestore.FieldValue.increment(1),
     });
-
     res.status(200).send({ result: "like success" });
-    // TODO: 알림 구현.
+
+    // 암호화된 글 작성자 uid 가져오기
+    let doc_encryptedUid = await DB.departMajor
+      .doc(body.docId)
+      .get()
+      .then((doc) => doc.data().encryptedUid);
+
+    // 복호화된 글 작성자 uid 가져오기
+    let doc_decryptedUid = decryptAES(doc_encryptedUid, UID_KEY);
+
+    await DB.users.doc(doc_decryptedUid).collection("notifications").add({
+      type: NOTIFICATION_TYPES.LIKE_MY_DOC,
+      docId: body.docId,
+      checked: false,
+      timestamp: firestore.FieldValue.serverTimestamp(),
+      boardName: "DEPARTMAJOR",
+    });
+    console.log("send LIKE MY DOC notification success");
   } catch (err) {
     console.log(err);
     return next(ERRORS.DATA.INVALID_DATA);
@@ -314,7 +331,26 @@ asyncRouter.post("/comment/like", async (req, res, next) => {
       });
 
     res.status(200).send({ result: "comment like success" });
-    // TODO: 알림 구현.
+
+    // 암호화된 댓글 작성자 uid 가져오기
+    let comment_encryptedUid = await DB.departMajor
+      .doc(body.originalDocId)
+      .collection("comments")
+      .doc(body.commentId)
+      .get()
+      .then((doc) => doc.data().encryptedUid);
+
+    // 복호화된 댓글 작성자 uid 가져오기
+    let comment_decryptedUid = decryptAES(comment_encryptedUid, UID_KEY);
+
+    await DB.users.doc(comment_decryptedUid).collection("notifications").add({
+      type: NOTIFICATION_TYPES.LIKE_MY_COMMENT,
+      docId: body.originalDocId,
+      checked: false,
+      timestamp: firestore.FieldValue.serverTimestamp(),
+      boardName: "DEPARTMAJOR",
+    });
+    console.log("send LIKE MY COMMENT notification success");
   } catch (err) {
     console.log(err);
     return next(ERRORS.DATA.INVALID_DATA);
@@ -472,7 +508,31 @@ asyncRouter.post("/subcomment/like", async (req, res, next) => {
       });
 
     res.status(200).send({ result: "subcomment like success" });
-    // TODO: 알림 구현.
+
+    // 암호화된 대댓글 작성자 uid 가져오기
+    let subcomment_encryptedUid = await DB.departMajor
+      .doc(body.originalDocId)
+      .collection("comments")
+      .doc(body.commentId)
+      .collection("subcomments")
+      .doc(body.subcommentId)
+      .get()
+      .then((doc) => doc.data().encryptedUid);
+
+    // 복호화된 댓글 작성자 uid 가져오기
+    let subcomment_decryptedUid = decryptAES(subcomment_encryptedUid, UID_KEY);
+
+    await DB.users
+      .doc(subcomment_decryptedUid)
+      .collection("notifications")
+      .add({
+        type: NOTIFICATION_TYPES.LIKE_MY_SUBCOMMENT,
+        docId: body.originalDocId,
+        checked: false,
+        timestamp: firestore.FieldValue.serverTimestamp(),
+        boardName: "DEPARTMAJOR",
+      });
+    console.log("send LIKE MY SUBCOMMENT notification success");
   } catch (err) {
     console.log(err);
     return next(ERRORS.DATA.INVALID_DATA);

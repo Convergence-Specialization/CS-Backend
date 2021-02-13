@@ -15,6 +15,15 @@ const ERRORS = {
     INVALID_DATA: "INVALID_DATA",
   },
 };
+
+const NOTIFICATION_TYPES = {
+  LIKE_MY_DOC: "LIKE_MY_DOC",
+  LIKE_MY_COMMENT: "LIKE_MY_COMMENT",
+  LIKE_MY_SUBCOMMENT: "LIKE_MY_SUBCOMMENT",
+  COMMENT_MY_DOC: "COMMENT_MY_DOC",
+  COMMENT_MY_SUBCOMMENT: "COMMENT_MY_SUBCOMMENT",
+};
+
 firebaseAdmin.initializeApp({
   credential: firebaseAdmin.credential.cert(secrets),
 });
@@ -62,6 +71,7 @@ module.exports = {
   firebaseAdmin,
   DB,
   smtpTransport,
+  NOTIFICATION_TYPES,
   ERRORS,
   tokenExporter,
   getRandomKey,
