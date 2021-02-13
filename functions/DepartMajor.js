@@ -80,6 +80,51 @@ asyncRouter.post("/create", async (req, res, next) => {
   }
 });
 
+asyncRouter.post("/delete", async (req, res, next) => {
+  // body 추출
+  const { body } = req;
+  // 토큰 확인
+  const user = await tokenExporter(req.headers);
+  if (
+    user === ERRORS.AUTH.TOKEN_FAIL ||
+    user === ERRORS.AUTH.NO_AUTH_IN_HEADER
+  ) {
+    return next(user);
+  }
+
+  // 글 삭제 시작
+  try {
+    // 컬렉션에서 글 작성할 때 저장한 AES키 가져와야함.
+    let { UID_KEY } = await DB.departMajor_UID_KEY
+      .doc(body.docId)
+      .get()
+      .then((doc) => doc.data());
+
+    // 권한 체크.
+    if (user.uid !== doc_decryptedUid) {
+      return next(ERRORS.AUTH.NO_PERMISSION);
+    }
+
+    // 글 목록에서 제거
+    await DB.departMajor.doc(body.docId).delete();
+    res.status(200).send({ result: "delete doc success" });
+
+    // 복호화된 글 작성자 uid 가져오기
+    let doc_decryptedUid = decryptAES(doc_encryptedUid, UID_KEY);
+
+    // 내 글 목록에서 제거
+    await DB.users
+      .doc(doc_decryptedUid)
+      .collection("myposts")
+      .doc(body.docId)
+      .delete();
+    console.log("delete mypost success");
+  } catch (err) {
+    console.log(err);
+    return next(ERRORS.DATA.INVALID_DATA);
+  }
+});
+
 asyncRouter.post("/myencrypteduid", async (req, res, next) => {
   // body 추출
   const { body } = req;
