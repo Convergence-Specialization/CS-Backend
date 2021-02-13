@@ -236,29 +236,42 @@ asyncRouter.post("/comment/create", async (req, res, next) => {
     });
     res.status(200).send({ result: "Post comment success" });
     // TODO: 댓글 수 늘리기. 여기서부터는 promise로!
-    Promise.all([
+    await Promise.all([
       new Promise(async (resolve) => {
+        // 댓글 수 1 올리기
         await DB.departMajor.doc(body.docId).update({
           comments_count: firestore.FieldValue.increment(1),
         });
         resolve();
       }),
-    ])
-      .then(() => {
-        console.log("comment count increase complete");
-      })
-      .catch((err) => {
-        console.log("error while increasing comment count", err.message);
-      });
+      new Promise(async (resolve) => {
+        // 암호화된 글 작성자 uid 가져오기
+        let doc_encryptedUid = await DB.departMajor
+          .doc(body.docId)
+          .get()
+          .then((doc) => doc.data().encryptedUid);
 
-    // TODO: 알림 구현. 여기서부터는 promise로!
-    // 원 글 작성자 암호화된 uid 가져옴
-    // let post_encryptedUid = await DB.departMajor
-    //   .doc(body.docId)
-    //   .get()
-    //   .then((doc) => doc.data().encryptedUid);
+        // 복호화된 글 작성자 uid 가져오기
+        let doc_decryptedUid = decryptAES(doc_encryptedUid, UID_KEY);
 
-    // await DB.users.doc(user.uid).collection();
+        // 내가 내 글에 댓글 쓰는거면 알림 안띄우기.
+        if (doc_decryptedUid === user.uid) {
+          return resolve();
+        }
+
+        // 해당 사용자에게 알림 띄워주기
+        await DB.users.doc(doc_decryptedUid).collection("notifications").add({
+          type: NOTIFICATION_TYPES.COMMENT_MY_DOC,
+          docId: body.docId,
+          checked: false,
+          timestamp: firestore.FieldValue.serverTimestamp(),
+          boardName: "DEPARTMAJOR",
+          preview: body.content,
+        });
+        console.log("send COMMENT MY DOC notification success");
+        resolve();
+      }),
+    ]);
   } catch (err) {
     console.log(err);
     return next(ERRORS.DATA.INVALID_DATA);
@@ -414,18 +427,45 @@ asyncRouter.post("/subcomment/create", async (req, res, next) => {
     // TODO: 댓글 수 늘리기, 알림 구현. 여기서부터는 promise로!
     Promise.all([
       new Promise(async (resolve) => {
+        // 댓글 수 1 추가
         await DB.departMajor.doc(body.originalDocId).update({
           comments_count: firestore.FieldValue.increment(1),
         });
         resolve();
       }),
-    ])
-      .then(() => {
-        console.log("comment count increase complete");
-      })
-      .catch((err) => {
-        console.log("error while increasing comment count", err.message);
-      });
+      new Promise(async (resolve) => {
+        // 암호화된 글 작성자 uid 가져오기
+        let comment_encryptedUid = await DB.departMajor
+          .doc(body.originalDocId)
+          .collection("comments")
+          .doc(body.commentId)
+          .get()
+          .then((doc) => doc.data().encryptedUid);
+
+        // 복호화된 글 작성자 uid 가져오기
+        let comment_decryptedUid = decryptAES(comment_encryptedUid, UID_KEY);
+
+        // 내가 내 글에 댓글 쓰는거면 알림 안띄우기.
+        if (comment_decryptedUid === user.uid) {
+          return resolve();
+        }
+
+        // 해당 사용자에게 알림 띄워주기
+        await DB.users
+          .doc(comment_decryptedUid)
+          .collection("notifications")
+          .add({
+            type: NOTIFICATION_TYPES.SUBCOMMENT_MY_COMMENT,
+            docId: body.originalDocId,
+            checked: false,
+            timestamp: firestore.FieldValue.serverTimestamp(),
+            boardName: "DEPARTMAJOR",
+            preview: body.content,
+          });
+        console.log("send SUBCOMMENT_MY_COMMENT notification success");
+        resolve();
+      }),
+    ]);
   } catch (err) {
     console.log(err);
     return next(ERRORS.DATA.INVALID_DATA);
