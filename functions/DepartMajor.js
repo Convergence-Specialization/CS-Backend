@@ -341,7 +341,6 @@ asyncRouter.post("/comment/create", async (req, res, next) => {
       report_count: 0,
     });
     res.status(200).send({ result: "Post comment success" });
-    // TODO: 댓글 수 늘리기. 여기서부터는 promise로!
     await Promise.all([
       new Promise(async (resolve) => {
         // 댓글 수 1 올리기
@@ -410,7 +409,7 @@ asyncRouter.post("/comment/delete", async (req, res, next) => {
   try {
     // 컬렉션에서 글 작성할 때 저장한 AES키 가져와야함.
     let { UID_KEY } = await DB.departMajor_UID_KEY
-      .doc(body.docId)
+      .doc(body.originalDocId)
       .get()
       .then((doc) => doc.data());
 
@@ -430,9 +429,23 @@ asyncRouter.post("/comment/delete", async (req, res, next) => {
       return next(ERRORS.AUTH.NO_PERMISSION);
     }
 
+    // 대댓글 개수 가져오기
+    let subcommentCount = await DB.departMajor
+      .doc(body.originalDocId)
+      .collection("comments")
+      .doc(body.commentId)
+      .collection("subcomments")
+      .get()
+      .then((querySnapshot) => querySnapshot.size);
+
+    // 대댓글 개수 + 본인 (1) 만큼 댓글 수 삭제
+    await DB.departMajor.doc(body.originalDocId).update({
+      comments_count: firestore.FieldValue.increment(-(subcommentCount + 1)),
+    });
+
     // 댓글 목록에서 제거
     await DB.departMajor
-      .doc(body.docId)
+      .doc(body.originalDocId)
       .collection("comments")
       .doc(body.commentId)
       .delete();
@@ -737,7 +750,7 @@ asyncRouter.post("/subcomment/delete", async (req, res, next) => {
   try {
     // 컬렉션에서 글 작성할 때 저장한 AES키 가져와야함.
     let { UID_KEY } = await DB.departMajor_UID_KEY
-      .doc(body.docId)
+      .doc(body.originalDocId)
       .get()
       .then((doc) => doc.data());
 
@@ -761,7 +774,7 @@ asyncRouter.post("/subcomment/delete", async (req, res, next) => {
 
     // 대댓글 목록에서 제거
     await DB.departMajor
-      .doc(body.docId)
+      .doc(body.originalDocId)
       .collection("comments")
       .doc(body.commentId)
       .collection("subcomments")
