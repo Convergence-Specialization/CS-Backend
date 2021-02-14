@@ -319,6 +319,29 @@ paths:
                 docId:
                   type: string
         description: 삭제할 docId가 필요합니다.
+  /board/departmajor/report:
+    post:
+      summary: 글을 신고하는 api
+      tags:
+        - 전과 게시판
+      responses: {}
+      operationId: post-board-departmajor-report
+      description: 글을 신고하는 api입니다.
+      security:
+        - idToken: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+          application/xml:
+            schema:
+              type: object
+              properties:
+                docId:
+                  type: string
+        description: ㅇㅇ
 components:
   schemas:
     User:
