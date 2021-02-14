@@ -384,6 +384,66 @@ asyncRouter.post("/comment/create", async (req, res, next) => {
   }
 });
 
+asyncRouter.post("/comment/delete", async (req, res, next) => {
+  // body 추출
+  const { body } = req;
+  // 토큰 확인
+  const user = await tokenExporter(req.headers);
+  if (
+    user === ERRORS.AUTH.TOKEN_FAIL ||
+    user === ERRORS.AUTH.NO_AUTH_IN_HEADER
+  ) {
+    return next(user);
+  }
+
+  // 글자 수 확인
+  if (
+    body.originalDocId === undefined ||
+    body.commentId === undefined ||
+    body.originalDocId === "" ||
+    body.commentId === ""
+  ) {
+    return next(ERRORS.DATA.INVALID_DATA);
+  }
+
+  // 댓글 삭제 시작
+  try {
+    // 컬렉션에서 글 작성할 때 저장한 AES키 가져와야함.
+    let { UID_KEY } = await DB.departMajor_UID_KEY
+      .doc(body.docId)
+      .get()
+      .then((doc) => doc.data());
+
+    // 암호화된 댓글 작성자 uid 가져오기
+    let comment_encryptedUid = await DB.departMajor
+      .doc(body.originalDocId)
+      .collection("comments")
+      .doc(body.commentId)
+      .get()
+      .then((doc) => doc.data().encryptedUid);
+
+    // 복호화된 글 작성자 uid 가져오기
+    let comment_decryptedUid = decryptAES(comment_encryptedUid, UID_KEY);
+
+    // 권한 체크.
+    if (user.uid !== comment_decryptedUid) {
+      return next(ERRORS.AUTH.NO_PERMISSION);
+    }
+
+    // 댓글 목록에서 제거
+    await DB.departMajor
+      .doc(body.docId)
+      .collection("comments")
+      .doc(body.commentId)
+      .delete();
+    res.status(200).send({ result: "delete comment success" });
+    console.log("delete comment success");
+  } catch (err) {
+    console.log(err);
+    return next(ERRORS.DATA.INVALID_DATA);
+  }
+});
+
 asyncRouter.post("/comment/report", async (req, res, next) => {
   // body 추출
   const { body } = req;
@@ -643,6 +703,71 @@ asyncRouter.post("/subcomment/create", async (req, res, next) => {
         resolve();
       }),
     ]);
+  } catch (err) {
+    console.log(err);
+    return next(ERRORS.DATA.INVALID_DATA);
+  }
+});
+
+asyncRouter.post("/subcomment/delete", async (req, res, next) => {
+  // body 추출
+  const { body } = req;
+  // 토큰 확인
+  const user = await tokenExporter(req.headers);
+  if (
+    user === ERRORS.AUTH.TOKEN_FAIL ||
+    user === ERRORS.AUTH.NO_AUTH_IN_HEADER
+  ) {
+    return next(user);
+  }
+
+  // 글자 수 확인
+  if (
+    body.originalDocId === undefined ||
+    body.commentId === undefined ||
+    body.subcommentId === undefined ||
+    body.originalDocId === "" ||
+    body.commentId === "" ||
+    body.subcommentId === ""
+  ) {
+    return next(ERRORS.DATA.INVALID_DATA);
+  }
+
+  // 대댓글 삭제 시작
+  try {
+    // 컬렉션에서 글 작성할 때 저장한 AES키 가져와야함.
+    let { UID_KEY } = await DB.departMajor_UID_KEY
+      .doc(body.docId)
+      .get()
+      .then((doc) => doc.data());
+
+    // 암호화된 댓글 작성자 uid 가져오기
+    let subcomment_encryptedUid = await DB.departMajor
+      .doc(body.originalDocId)
+      .collection("comments")
+      .doc(body.commentId)
+      .collection("subcomments")
+      .doc(body.subcommentId)
+      .get()
+      .then((doc) => doc.data().encryptedUid);
+
+    // 복호화된 글 작성자 uid 가져오기
+    let subcomment_decryptedUid = decryptAES(subcomment_encryptedUid, UID_KEY);
+
+    // 권한 체크.
+    if (user.uid !== subcomment_decryptedUid) {
+      return next(ERRORS.AUTH.NO_PERMISSION);
+    }
+
+    // 대댓글 목록에서 제거
+    await DB.departMajor
+      .doc(body.docId)
+      .collection("comments")
+      .doc(body.commentId)
+      .collection("subcomments")
+      .doc(body.subcommentId)
+      .delete();
+    res.status(200).send({ result: "delete subcomment success" });
   } catch (err) {
     console.log(err);
     return next(ERRORS.DATA.INVALID_DATA);
