@@ -774,6 +774,11 @@ asyncRouter.post("/subcomment/delete", async (req, res, next) => {
       return next(ERRORS.AUTH.NO_PERMISSION);
     }
 
+    // 댓글 수 삭제
+    await DB.departMajor.doc(body.originalDocId).update({
+      comments_count: firestore.FieldValue.increment(-1),
+    });
+
     // 대댓글 목록에서 제거
     await DB.departMajor
       .doc(body.originalDocId)
