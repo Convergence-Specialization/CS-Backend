@@ -131,6 +131,61 @@ asyncRouter.post("/delete", async (req, res, next) => {
   }
 });
 
+asyncRouter.post("/report", async (req, res, next) => {
+  // body 추출
+  const { body } = req;
+  // 토큰 확인
+  const user = await tokenExporter(req.headers);
+  if (
+    user === ERRORS.AUTH.TOKEN_FAIL ||
+    user === ERRORS.AUTH.NO_AUTH_IN_HEADER
+  ) {
+    return next(user);
+  }
+  // 글자 수 확인
+  if (body.docId === undefined || body.docId === "") {
+    return next(ERRORS.DATA.INVALID_DATA);
+  }
+
+  // 신고 처리 시작.
+  try {
+    // 컬렉션에서 글 작성할 때 저장한 AES키 가져와야함.
+    let { UID_KEY } = await DB.departMajor_UID_KEY
+      .doc(body.docId)
+      .get()
+      .then((doc) => doc.data());
+
+    // 좋아요하는 사람 UID 암호화.
+    const encryptedUid = encryptAES(user.uid, UID_KEY);
+
+    // 좋아요 이미 했는지 확인
+    if (
+      await DB.departMajor
+        .doc(body.docId)
+        .collection("reports")
+        .where("encryptedUid", "==", encryptedUid)
+        .get()
+        .then((querySnapshot) => querySnapshot.size !== 0)
+    ) {
+      console.log("ALREADY REPORTED");
+      return next(ERRORS.DATA.INVALID_DATA);
+    }
+    // 좋아요 누가 했는지 작성
+    await DB.departMajor.doc(body.docId).collection("reports").add({
+      timestamp: firestore.FieldValue.serverTimestamp(),
+      encryptedUid,
+    });
+    // 좋아요 수 1 올리기.
+    await DB.departMajor.doc(body.docId).update({
+      report_count: firestore.FieldValue.increment(1),
+    });
+    res.status(200).send({ result: "report success" });
+  } catch (err) {
+    console.log(err);
+    return next(ERRORS.DATA.INVALID_DATA);
+  }
+});
+
 asyncRouter.post("/myencrypteduid", async (req, res, next) => {
   // body 추출
   const { body } = req;
@@ -329,6 +384,77 @@ asyncRouter.post("/comment/create", async (req, res, next) => {
   }
 });
 
+asyncRouter.post("/comment/report", async (req, res, next) => {
+  // body 추출
+  const { body } = req;
+  // 토큰 확인
+  const user = await tokenExporter(req.headers);
+  if (
+    user === ERRORS.AUTH.TOKEN_FAIL ||
+    user === ERRORS.AUTH.NO_AUTH_IN_HEADER
+  ) {
+    return next(user);
+  }
+  // 글자 수 확인
+  if (
+    body.originalDocId === undefined ||
+    body.commentId === undefined ||
+    body.originalDocId === "" ||
+    body.commentId === ""
+  ) {
+    return next(ERRORS.DATA.INVALID_DATA);
+  }
+
+  // 신고 처리 시작.
+  try {
+    // 컬렉션에서 글 작성할 때 저장한 AES키 가져와야함.
+    let { UID_KEY } = await DB.departMajor_UID_KEY
+      .doc(body.originalDocId)
+      .get()
+      .then((doc) => doc.data());
+
+    // 신고하는 사람 UID 암호화.
+    const encryptedUid = encryptAES(user.uid, UID_KEY);
+
+    // 댓글에 신고 이미 했는지 확인
+    if (
+      await DB.departMajor
+        .doc(body.originalDocId)
+        .collection("comments")
+        .doc(body.commentId)
+        .collection("reports")
+        .where("encryptedUid", "==", encryptedUid)
+        .get()
+        .then((querySnapshot) => querySnapshot.size !== 0)
+    ) {
+      console.log("ALREADY REPORTED");
+      return next(ERRORS.DATA.INVALID_DATA);
+    }
+    // 신고 누가 했는지 작성
+    await DB.departMajor
+      .doc(body.originalDocId)
+      .collection("comments")
+      .doc(body.commentId)
+      .collection("reports")
+      .add({
+        timestamp: firestore.FieldValue.serverTimestamp(),
+        encryptedUid,
+      });
+    // 신고 수 1 올리기.
+    await DB.departMajor
+      .doc(body.originalDocId)
+      .collection("comments")
+      .doc(body.commentId)
+      .update({
+        report_count: firestore.FieldValue.increment(1),
+      });
+    res.status(200).send({ result: "comment report success" });
+  } catch (err) {
+    console.log(err);
+    return next(ERRORS.DATA.INVALID_DATA);
+  }
+});
+
 asyncRouter.post("/comment/like", async (req, res, next) => {
   // body 추출
   const { body } = req;
@@ -517,6 +643,88 @@ asyncRouter.post("/subcomment/create", async (req, res, next) => {
         resolve();
       }),
     ]);
+  } catch (err) {
+    console.log(err);
+    return next(ERRORS.DATA.INVALID_DATA);
+  }
+});
+
+asyncRouter.post("/subcomment/report", async (req, res, next) => {
+  // body 추출
+  const { body } = req;
+  // 토큰 확인
+  const user = await tokenExporter(req.headers);
+  if (
+    user === ERRORS.AUTH.TOKEN_FAIL ||
+    user === ERRORS.AUTH.NO_AUTH_IN_HEADER
+  ) {
+    return next(user);
+  }
+  // 글자 수 확인
+  if (
+    body.originalDocId === undefined ||
+    body.commentId === undefined ||
+    body.subcommentId === undefined ||
+    body.originalDocId === "" ||
+    body.commentId === "" ||
+    body.subcommentId === ""
+  ) {
+    return next(ERRORS.DATA.INVALID_DATA);
+  }
+
+  // 신고 처리 시작.
+  try {
+    // 컬렉션에서 글 작성할 때 저장한 AES키 가져와야함.
+    let { UID_KEY } = await DB.departMajor_UID_KEY
+      .doc(body.originalDocId)
+      .get()
+      .then((doc) => doc.data());
+
+    // 신고하는 사람 UID 암호화.
+    const encryptedUid = encryptAES(user.uid, UID_KEY);
+
+    // 대댓글에 신고 이미 했는지 확인
+    if (
+      await DB.departMajor
+        .doc(body.originalDocId)
+        .collection("comments")
+        .doc(body.commentId)
+        .collection("subcomments")
+        .doc(body.subcommentId)
+        .collection("reports")
+        .where("encryptedUid", "==", encryptedUid)
+        .get()
+        .then((querySnapshot) => querySnapshot.size !== 0)
+    ) {
+      console.log("ALREADY REPORTED");
+      return next(ERRORS.DATA.INVALID_DATA);
+    }
+
+    // 신고 누가 했는지 작성
+    await DB.departMajor
+      .doc(body.originalDocId)
+      .collection("comments")
+      .doc(body.commentId)
+      .collection("subcomments")
+      .doc(body.subcommentId)
+      .collection("reports")
+      .add({
+        timestamp: firestore.FieldValue.serverTimestamp(),
+        encryptedUid,
+      });
+
+    // 신고 수 1 올리기.
+    await DB.departMajor
+      .doc(body.originalDocId)
+      .collection("comments")
+      .doc(body.commentId)
+      .collection("subcomments")
+      .doc(body.subcommentId)
+      .update({
+        report_count: firestore.FieldValue.increment(1),
+      });
+
+    res.status(200).send({ result: "subcomment report success" });
   } catch (err) {
     console.log(err);
     return next(ERRORS.DATA.INVALID_DATA);
