@@ -8,6 +8,7 @@ const {
   ERRORS,
   getRandomKey,
   NOTIFICATION_TYPES,
+  nicknameList,
 } = require("./Commons");
 const asyncRouter = asyncify(express.Router());
 
@@ -55,6 +56,7 @@ asyncRouter.post("/create", async (req, res, next) => {
     await DB.departMajor.doc(docId).set({
       timestamp: firestore.FieldValue.serverTimestamp(),
       encryptedUid,
+      nickname: nicknameList[Math.floor(Math.random() * nicknameList.length)],
       content: body.content,
       title: body.title,
       subject: body.subject,
