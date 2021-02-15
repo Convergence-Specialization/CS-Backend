@@ -1005,5 +1005,3 @@ asyncRouter.use((err, _req, res, _next) => {
 });
 
 module.exports = asyncRouter;
-
-// TODO: 댓글 작성시 알람 구현. 해당 user 컬렉션에 notifications 문서 -> 컬렉션에 문서 추가.
