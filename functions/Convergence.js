@@ -1,7 +1,7 @@
 const express = require("express");
 const asyncify = require("express-asyncify");
 const { encryptAES, decryptAES } = require("./AES");
-const {
+const { 
   firestore,
   DB,
   tokenExporter,

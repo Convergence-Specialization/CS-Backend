@@ -18,5 +18,6 @@ exports.mailAccount = {
   user: process.env.MAIL_USER,
   pass: process.env.MAIL_PASSWORD,
 };
-
 exports.cryptoConstIv = process.env.CRYPTO_CONST_IV;
+
+exports.superAdminEmails = process.env.SUPER_ADMIN_EMAILS.split(",");

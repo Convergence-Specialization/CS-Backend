@@ -125,7 +125,6 @@ asyncRouter.post("/lostpw", async (req, res) => {
         body: err,
       });
     });
-  // TODO: dotENV 사용해서 중요한 정보들 다 외부로 빼기. 이후 public으로 돌리기.
   const mailOptions = {
     from: "convergencessu@gmail.com",
     to: email,
