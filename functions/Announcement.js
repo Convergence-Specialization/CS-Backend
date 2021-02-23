@@ -1,6 +1,13 @@
 const express = require("express");
 const asyncify = require("express-asyncify");
-const { firestore, DB, tokenExporter, ERRORS } = require("./Commons");
+const { adminEmails } = require("../config");
+const {
+  firestore,
+  DB,
+  tokenExporter,
+  ERRORS,
+  findStrInArray,
+} = require("./Commons");
 const asyncRouter = asyncify(express.Router());
 
 asyncRouter.post("/create", async (req, res, next) => {
@@ -26,18 +33,24 @@ asyncRouter.post("/create", async (req, res, next) => {
     return next(ERRORS.DATA.INVALID_DATA);
   }
 
+  // 관리자인지 체크.
+  if (!findStrInArray(user.email, adminEmails)) {
+    return next(ERRORS.AUTH.NO_PERMISSION);
+  }
   try {
     await DB.announcement.add({
       timestamp: firestore.FieldValue.serverTimestamp(),
-      title: body.title,
       eventPeriod: body.eventPeriod,
-      content: body.content,
       imgArray: body.imgArray,
+      content: body.content,
+      title: body.title,
       author: user.uid,
-    }); 
+    });
     res.status(200).send({ result: "Create announcement success", docId });
   } catch (err) {
     console.log(err);
     return next(ERRORS.DATA.INVALID_DATA);
   }
 });
+
+module.exports = asyncRouter;

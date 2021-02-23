@@ -70,6 +70,14 @@ const getRandomKey = (bytes) => {
   return crypto.randomBytes(bytes);
 };
 
+const findStrInArray = (strToFind, array) => {
+  let found = false;
+  array.forEach((item) => {
+    found = strToFind === item;
+  });
+  return found;
+};
+
 const nicknameList = [
   "배고픈 융슝이",
   "졸린 융슝이",
@@ -133,4 +141,5 @@ module.exports = {
   tokenExporter,
   getRandomKey,
   nicknameList,
+  findStrInArray,
 };

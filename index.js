@@ -7,6 +7,7 @@ const PORT = process.env.PORT || 5000;
 
 const departMajorRouter = require("./functions/DepartMajor");
 const convergenceRouter = require("./functions/Convergence");
+const announcementRouter = require("./functions/Announcement");
 const extraRouter = require("./functions/Extra");
 
 const usersRouter = require("./functions/Users");
@@ -17,6 +18,7 @@ app.use(cors());
 
 app.use("/board/departmajor", departMajorRouter);
 app.use("/board/convergence", convergenceRouter);
+app.use("/board/announcement", announcementRouter);
 app.use("/", extraRouter);
 
 app.use("/user", usersRouter);

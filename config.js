@@ -21,3 +21,4 @@ exports.mailAccount = {
 exports.cryptoConstIv = process.env.CRYPTO_CONST_IV;
 
 exports.superAdminEmails = process.env.SUPER_ADMIN_EMAILS.split(",");
+exports.adminEmails = process.env.ADMIN_EMAILS.split(",");
