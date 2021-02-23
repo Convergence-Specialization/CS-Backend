@@ -37,6 +37,7 @@ const DB = {
   departMajor_UID_KEY: firestore().collection("departMajor_UID_KEY"),
   convergence: firestore().collection("convergence"),
   convergence_UID_KEY: firestore().collection("convergence_UID_KEY"),
+  announcement: firestore().collection("announcement"),
 };
 
 const smtpTransport = nodemailer.createTransport({
