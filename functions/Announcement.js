@@ -33,6 +33,12 @@ asyncRouter.post("/create", async (req, res, next) => {
     return next(ERRORS.DATA.INVALID_DATA);
   }
 
+  console.log(
+    "이메일",
+    user.email,
+    "체크",
+    findStrInArray(user.email, adminEmails)
+  );
   // 관리자인지 체크.
   if (!findStrInArray(user.email, adminEmails)) {
     return next(ERRORS.AUTH.NO_PERMISSION);
@@ -46,7 +52,7 @@ asyncRouter.post("/create", async (req, res, next) => {
       title: body.title,
       author: user.uid,
     });
-    res.status(200).send({ result: "Create announcement success", docId });
+    res.status(200).send({ result: "Create announcement success" });
   } catch (err) {
     console.log(err);
     return next(ERRORS.DATA.INVALID_DATA);

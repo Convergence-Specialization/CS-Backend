@@ -73,7 +73,9 @@ const getRandomKey = (bytes) => {
 const findStrInArray = (strToFind, array) => {
   let found = false;
   array.forEach((item) => {
-    found = strToFind === item;
+    if (!found) {
+      found = strToFind === item;
+    }
   });
   return found;
 };
