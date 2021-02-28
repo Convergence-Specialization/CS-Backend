@@ -1,7 +1,7 @@
 const express = require("express");
 const asyncify = require("express-asyncify");
 const { encryptAES, decryptAES } = require("./AES");
-const { 
+const {
   firestore,
   DB,
   tokenExporter,
@@ -281,6 +281,35 @@ asyncRouter.post("/like", async (req, res, next) => {
       boardName: "CONVERGENCE",
     });
     console.log("send LIKE MY DOC notification success");
+  } catch (err) {
+    console.log(err);
+    return next(ERRORS.DATA.INVALID_DATA);
+  }
+
+  // 핫게 가는지 확인
+  try {
+    let likes_count = await DB.convergence
+      .doc(body.docId)
+      .get()
+      .then((doc) => doc.data().likes_count);
+
+    if (likes_count >= 5) {
+      // 이미 핫게에 있는지 확인
+      if (
+        await DB.hot
+          .where("boardName", "==", "CONVERGENCE")
+          .where("docId", "==", docId)
+          .get()
+          .then((querySnapshot) => querySnapshot.size === 0)
+      ) {
+        // 핫게에 없으면 추가 시작.
+        await DB.hot.doc("CONVERGENCE".concat(docId)).set({
+          docId: docId,
+          boardName: "CONVERGENCE",
+          timestamp: firestore.FieldValue.serverTimestamp(),
+        });
+      }
+    }
   } catch (err) {
     console.log(err);
     return next(ERRORS.DATA.INVALID_DATA);
