@@ -298,13 +298,13 @@ asyncRouter.post("/like", async (req, res, next) => {
       if (
         await DB.hot
           .where("boardName", "==", "CONVERGENCE")
-          .where("docId", "==", docId)
+          .where("docId", "==", body.docId)
           .get()
           .then((querySnapshot) => querySnapshot.size === 0)
       ) {
         // 핫게에 없으면 추가 시작.
-        await DB.hot.doc("CONVERGENCE".concat(docId)).set({
-          docId: docId,
+        await DB.hot.doc("CONVERGENCE".concat(body.docId)).set({
+          docId: body.docId,
           boardName: "CONVERGENCE",
           timestamp: firestore.FieldValue.serverTimestamp(),
         });
