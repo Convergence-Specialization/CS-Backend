@@ -303,6 +303,7 @@ asyncRouter.post("/like", async (req, res, next) => {
           .then((querySnapshot) => querySnapshot.size === 0)
       ) {
         // 핫게에 없으면 추가 시작.
+        console.log("ADDING TO HOT BOARD - CONVERGENCE");
         await DB.hot.doc("CONVERGENCE".concat(body.docId)).set({
           docId: body.docId,
           boardName: "CONVERGENCE",

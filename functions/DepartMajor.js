@@ -299,6 +299,36 @@ asyncRouter.post("/like", async (req, res, next) => {
     console.log(err);
     return next(ERRORS.DATA.INVALID_DATA);
   }
+
+  // 핫게 가는지 확인
+  try {
+    let likes_count = await DB.departMajor
+      .doc(body.docId)
+      .get()
+      .then((doc) => doc.data().likes_count);
+
+    if (likes_count >= 5) {
+      // 이미 핫게에 있는지 확인
+      if (
+        await DB.hot
+          .where("boardName", "==", "DEPARTMAJOR")
+          .where("docId", "==", body.docId)
+          .get()
+          .then((querySnapshot) => querySnapshot.size === 0)
+      ) {
+        // 핫게에 없으면 추가 시작.
+        console.log("ADDING TO HOT BOARD - DEPARTMAJOR");
+        await DB.hot.doc("DEPARTMAJOR".concat(body.docId)).set({
+          docId: body.docId,
+          boardName: "DEPARTMAJOR",
+          timestamp: firestore.FieldValue.serverTimestamp(),
+        });
+      }
+    }
+  } catch (err) {
+    console.log(err);
+    return next(ERRORS.DATA.INVALID_DATA);
+  }
 });
 
 asyncRouter.post("/comment/create", async (req, res, next) => {
