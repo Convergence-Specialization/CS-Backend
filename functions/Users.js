@@ -1,14 +1,6 @@
 const express = require("express");
 const asyncify = require("express-asyncify");
-const {
-  firestore,
-  DB,
-  tokenExporter,
-  ERRORS,
-  getRandomKey,
-  smtpTransport,
-  firebaseAdmin,
-} = require("./Commons");
+const { DB, ERRORS, smtpTransport, firebaseAdmin } = require("./Commons");
 const asyncRouter = asyncify(express.Router());
 
 // 구글 로그인 정보가 DB에 있는지 확인하는 메소드
@@ -135,7 +127,7 @@ asyncRouter.post("/lostpw", async (req, res) => {
     if (error) {
       res.status(402).send({
         error: "비밀번호 재설정 링크 발송 중 오류가 났습니다",
-        body: err,
+        body: error,
       });
     }
     smtpTransport.close();
