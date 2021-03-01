@@ -131,6 +131,24 @@ asyncRouter.post("/delete", async (req, res, next) => {
     console.log(err);
     return next(ERRORS.DATA.INVALID_DATA);
   }
+
+  try {
+    // 핫게에 있는지 확인
+    if (
+      await DB.hot
+        .where("boardName", "==", "DEPARTMAJOR")
+        .where("docId", "==", body.docId)
+        .get()
+        .then((querySnapshot) => querySnapshot.size !== 0)
+    ) {
+      // 핫게에 있으면 삭제 시작.
+      console.log("REMOVE FROM HOT BOARD - DEPARTMAJOR");
+      await DB.hot.doc("DEPARTMAJOR".concat(body.docId)).delete();
+    }
+  } catch (err) {
+    console.log(err);
+    return next(ERRORS.DATA.INVALID_DATA);
+  }
 });
 
 asyncRouter.post("/report", async (req, res, next) => {
@@ -295,6 +313,36 @@ asyncRouter.post("/like", async (req, res, next) => {
       boardName: "DEPARTMAJOR",
     });
     console.log("send LIKE MY DOC notification success");
+  } catch (err) {
+    console.log(err);
+    return next(ERRORS.DATA.INVALID_DATA);
+  }
+
+  // 핫게 가는지 확인
+  try {
+    let likes_count = await DB.departMajor
+      .doc(body.docId)
+      .get()
+      .then((doc) => doc.data().likes_count);
+
+    if (likes_count >= 5) {
+      // 이미 핫게에 있는지 확인
+      if (
+        await DB.hot
+          .where("boardName", "==", "DEPARTMAJOR")
+          .where("docId", "==", body.docId)
+          .get()
+          .then((querySnapshot) => querySnapshot.size === 0)
+      ) {
+        // 핫게에 없으면 추가 시작.
+        console.log("ADDING TO HOT BOARD - DEPARTMAJOR");
+        await DB.hot.doc("DEPARTMAJOR".concat(body.docId)).set({
+          docId: body.docId,
+          boardName: "DEPARTMAJOR",
+          timestamp: firestore.FieldValue.serverTimestamp(),
+        });
+      }
+    }
   } catch (err) {
     console.log(err);
     return next(ERRORS.DATA.INVALID_DATA);
@@ -1005,5 +1053,3 @@ asyncRouter.use((err, _req, res, _next) => {
 });
 
 module.exports = asyncRouter;
-
-// TODO: 댓글 작성시 알람 구현. 해당 user 컬렉션에 notifications 문서 -> 컬렉션에 문서 추가.

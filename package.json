@@ -7,7 +7,8 @@
   "author": "Poxios <poxios0310@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "start:dev": "nodemon --watch ./ index.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
@@ -17,7 +18,8 @@
     "firebase-admin": "^9.4.2",
     "heroku-dotenv": "^0.4.1",
     "morgan": "^1.10.0",
-    "nodemailer": "^6.4.17"
+    "nodemailer": "^6.4.17",
+    "nodemon": "^2.0.7"
   },
   "engines": {
     "node": "^15.6.0",

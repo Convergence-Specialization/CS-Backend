@@ -342,6 +342,43 @@ paths:
                 docId:
                   type: string
         description: ㅇㅇ
+  /board/announcement/create:
+    post:
+      summary: 공지 올리는 api
+      tags:
+        - 공지사항
+      responses:
+        '200':
+          description: OK
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+      operationId: post-board-announcement-create
+      description: 관리자가 공지를 올리는 API 입니다.
+      security:
+        - idToken: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                imgArray:
+                  type: array
+                  items:
+                    type: string
+                content:
+                  type: string
+                eventPeriod:
+                  type: string
+        description: 공지사항의 내용등이 들어가야합니다.
 components:
   schemas:
     User:
