@@ -117,6 +117,24 @@ asyncRouter.post("/delete", async (req, res, next) => {
     console.log(err);
     return next(ERRORS.DATA.INVALID_DATA);
   }
+
+  try {
+    // 핫게에 있는지 확인
+    if (
+      await DB.hot
+        .where("boardName", "==", "CONVERGENCE")
+        .where("docId", "==", body.docId)
+        .get()
+        .then((querySnapshot) => querySnapshot.size !== 0)
+    ) {
+      // 핫게에 있으면 삭제 시작.
+      console.log("REMOVE FROM HOT BOARD - CONVERGENCE");
+      await DB.hot.doc("CONVERGENCE".concat(body.docId)).delete();
+    }
+  } catch (err) {
+    console.log(err);
+    return next(ERRORS.DATA.INVALID_DATA);
+  }
 });
 
 asyncRouter.post("/report", async (req, res, next) => {
