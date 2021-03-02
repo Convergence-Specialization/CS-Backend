@@ -103,7 +103,7 @@ asyncRouter.post("/signup", async (req, res, next) => {
   }
 });
 
-asyncRouter.post("/lostpw", async (req, res) => {
+asyncRouter.post("/lostpw", async (req, res, _next) => {
   const {
     body: { email },
   } = req;
@@ -135,6 +135,11 @@ asyncRouter.post("/lostpw", async (req, res) => {
   res.status(200).send({
     result: "전송 성공",
   });
+});
+
+asyncRouter.post("/remove", async (req, res, next) => {
+  const { body } = req;
+  
 });
 
 asyncRouter.use((err, _req, res, _next) => {
