@@ -103,7 +103,7 @@ asyncRouter.post("/signup", async (req, res, next) => {
   }
 });
 
-asyncRouter.post("/lostpw", async (req, res) => {
+asyncRouter.post("/lostpw", async (req, res, _next) => {
   const {
     body: { email },
   } = req;
@@ -135,6 +135,32 @@ asyncRouter.post("/lostpw", async (req, res) => {
   res.status(200).send({
     result: "전송 성공",
   });
+});
+
+asyncRouter.post("/remove", async (req, res, next) => {
+  // body 추출
+  const { body } = req;
+
+  // 토큰 확인
+  const user = await tokenExporter(req.headers);
+  if (
+    user === ERRORS.AUTH.TOKEN_FAIL ||
+    user === ERRORS.AUTH.NO_AUTH_IN_HEADER
+  ) {
+    return next(user);
+  }
+
+  try {
+    await DB.users.doc(user.uid).update({
+      REMOVED: true,
+      REMOVED_REASON: body.reason,
+    });
+
+    await firebaseAdmin.auth().deleteUser(user.uid);
+    return res.status(200).send({ result: "User withdraw success" });
+  } catch (err) {
+    return next(ERRORS.AUTH.TOKEN_FAIL);
+  }
 });
 
 asyncRouter.use((err, _req, res, _next) => {

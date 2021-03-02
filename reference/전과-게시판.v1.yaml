@@ -379,6 +379,22 @@ paths:
                 eventPeriod:
                   type: string
         description: 공지사항의 내용등이 들어가야합니다.
+  /user/remove:
+    post:
+      summary: 사용자를 삭제하는 API입니다
+      tags: []
+      responses: {}
+      operationId: post-user-remove
+      description: 사용자를 삭제하는 API입니다
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+        description: 이유를 받습니다.
 components:
   schemas:
     User:
