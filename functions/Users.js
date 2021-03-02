@@ -1,6 +1,12 @@
 const express = require("express");
 const asyncify = require("express-asyncify");
-const { DB, ERRORS, smtpTransport, firebaseAdmin } = require("./Commons");
+const {
+  DB,
+  ERRORS,
+  smtpTransport,
+  firebaseAdmin,
+  tokenExporter,
+} = require("./Commons");
 const asyncRouter = asyncify(express.Router());
 
 // 구글 로그인 정보가 DB에 있는지 확인하는 메소드
