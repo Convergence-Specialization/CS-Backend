@@ -342,6 +342,35 @@ paths:
                 docId:
                   type: string
         description: ㅇㅇ
+  /user/remove:
+    post:
+      summary: 유저를 삭제하는 API입니다.
+      tags:
+        - 사용자
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: string
+      operationId: post-users-remove
+      description: 유저를 삭제하는 API입니다.
+      security:
+        - idToken: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+        description: 사유가 있어야합니다.
+    parameters: []
 components:
   schemas:
     User:
