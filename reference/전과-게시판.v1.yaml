@@ -398,7 +398,8 @@ paths:
   /announcement/delete:
     post:
       summary: 공지사항을 삭제하는 api입니다.
-      tags: []
+      tags:
+        - 공지사항
       responses: {}
       operationId: post-announcement-delete
       requestBody:
