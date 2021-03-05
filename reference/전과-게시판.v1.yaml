@@ -395,6 +395,22 @@ paths:
                 reason:
                   type: string
         description: 이유를 받습니다.
+  /announcement/delete:
+    post:
+      summary: 공지사항을 삭제하는 api입니다.
+      tags: []
+      responses: {}
+      operationId: post-announcement-delete
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                docId:
+                  type: string
+      security:
+        - idToken: []
 components:
   schemas:
     User:
