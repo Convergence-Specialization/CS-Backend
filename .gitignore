@@ -1,4 +1,4 @@
 /node_modules
 .env
-index_secret.js
 /functions/Secret.js
+index_secret.js
