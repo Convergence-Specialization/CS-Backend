@@ -38,6 +38,7 @@ const DB = {
   convergence: firestore().collection("convergence"),
   convergence_UID_KEY: firestore().collection("convergence_UID_KEY"),
   announcement: firestore().collection("announcement"),
+  promotion: firestore().collection("promotion"),
   hot: firestore().collection("hot"),
 };
 
