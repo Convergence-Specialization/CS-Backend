@@ -51,7 +51,7 @@ asyncRouter.post("/create", async (req, res, next) => {
       content: body.content,
       title: body.title,
       author: user.uid,
-      ongoing: true,
+      ongoing: false,
     });
     res.status(200).send({ result: "Create announcement success" });
   } catch (err) {
