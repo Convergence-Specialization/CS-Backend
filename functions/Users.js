@@ -98,6 +98,7 @@ asyncRouter.post("/signup", async (req, res, next) => {
             });
             return res.status(200).send({ result: "Email signup success" });
           } catch (err) {
+            console.log(err);
             return next(ERRORS.AUTH.CANT_SIGNUP);
           }
         } else {
