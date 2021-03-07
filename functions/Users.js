@@ -64,7 +64,7 @@ asyncRouter.post("/signup", async (req, res, next) => {
             await DB.users.doc(body.uid).set({
               name: body.name,
               student_id: body.student_id,
-              email: body.email,
+              email: body.email.trim(),
               is_convergence: body.is_convergence,
             });
             return res.status(200).send({ result: "Google signup success" });
@@ -80,20 +80,20 @@ asyncRouter.post("/signup", async (req, res, next) => {
       return next(ERRORS.DATA.INVALID_DATA);
     }
     return DB.users
-      .where("email", "==", body.email)
+      .where("email", "==", body.email.trim())
       .get()
       .then(async (doc) => {
         if (doc.empty) {
           try {
             const { uid } = await firebaseAdmin.auth().createUser({
-              email: body.email,
+              email: body.email.trim(),
               password: body.password,
               displayName: body.name,
             });
             await DB.users.doc(uid).set({
               name: body.name,
               student_id: body.student_id,
-              email: body.email,
+              email: body.email.trim(),
               is_convergence: body.is_convergence,
             });
             return res.status(200).send({ result: "Email signup success" });
